@@ -4,7 +4,7 @@ Plugin Name: Category Posts Widget
 Plugin URI: http://jameslao.com/2011/03/24/category-posts-widget-3-2/
 Description: Adds a widget that can display posts from a single category.
 Author: James Lao	
-Version: 3.2
+Version: 3.3
 Author URI: http://jameslao.com/
 */
 
@@ -41,8 +41,10 @@ function widget($args, $instance) {
 		$category_info = get_category($instance["cat"]);
 		$instance["title"] = $category_info->name;
   }
+  
+  $author = $instance['author'];
 
-  $valid_sort_orders = array('date', 'title', 'comment_count', 'random');
+  $valid_sort_orders = array('date', 'title', 'comment_count', 'rand');
   if ( in_array($instance['sort_by'], $valid_sort_orders) ) {
     $sort_by = $instance['sort_by'];
     $sort_order = (bool) $instance['asc_sort_order'] ? 'ASC' : 'DESC';
@@ -57,7 +59,8 @@ function widget($args, $instance) {
     "showposts=" . $instance["num"] . 
     "&cat=" . $instance["cat"] .
     "&orderby=" . $sort_by .
-    "&order=" . $sort_order
+    "&order=" . $sort_order .
+    "&author=" . $author
   );
 
 	// Excerpt length filter
@@ -97,7 +100,14 @@ function widget($args, $instance) {
 				<?php the_post_thumbnail( 'cat_post_thumb_size'.$this->id ); ?>
 				</a>
 			<?php endif; ?>
-
+			
+			<?php if ( $instance['author'] ) : ?>
+			<p class="author">
+				<?php echo get_avatar( get_the_author_meta( 'user_email' ) ); ?>
+				<a href="<?php echo get_author_posts_url($instance["author"]); ?>"><?php echo get_the_author($instance["author"]); ?></a>
+			</p>
+			<?php endif; ?>
+			
 			<?php if ( $instance['date'] ) : ?>
 			<p class="post-date"><?php the_time("j M Y"); ?></p>
 			<?php endif; ?>
@@ -167,6 +177,13 @@ function form($instance) {
 		</p>
 		
 		<p>
+			<label>
+				<?php _e( 'Author' ); ?>:
+				<?php wp_dropdown_users( array( 'name' => $this->get_field_name("author"), 'selected' => $instance["author"], 'show_option_none' => "NONE", 'show_option_all' => "ALL" ) ); ?>
+			</label>
+		</p>
+		
+		<p>
 			<label for="<?php echo $this->get_field_id("num"); ?>">
 				<?php _e('Number of posts to show'); ?>:
 				<input style="text-align: center;" id="<?php echo $this->get_field_id("num"); ?>" name="<?php echo $this->get_field_name("num"); ?>" type="text" value="<?php echo absint($instance["num"]); ?>" size='3' />
@@ -180,7 +197,7 @@ function form($instance) {
           <option value="date"<?php selected( $instance["sort_by"], "date" ); ?>>Date</option>
           <option value="title"<?php selected( $instance["sort_by"], "title" ); ?>>Title</option>
           <option value="comment_count"<?php selected( $instance["sort_by"], "comment_count" ); ?>>Number of comments</option>
-          <option value="random"<?php selected( $instance["sort_by"], "random" ); ?>>Random</option>
+          <option value="rand"<?php selected( $instance["sort_by"], "rand" ); ?>>Random</option>
         </select>
 			</label>
     </p>
